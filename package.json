@@ -6,14 +6,20 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
+    "preview": "npm run build && wrangler dev",
+    "astro": "astro",
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
-    "astro": "^5.1.0",
+    "@astrojs/cloudflare": "12",
     "@astrojs/vue": "^5.0.0",
-    "vue": "^3.5.0",
+    "astro": "^5.1.0",
     "gsap": "^3.12.5",
-    "lenis": "^1.1.14"
+    "lenis": "^1.1.14",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.114.0"
   }
 }
