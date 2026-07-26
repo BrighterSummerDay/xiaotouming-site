@@ -1,0 +1,37 @@
+---
+import { useTranslations } from '../i18n/utils';
+import type { Lang } from '../i18n/ui';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<footer class="site-footer">
+  <div class="container row">
+    <p class="mono">{t('footer.note')}</p>
+    <div class="social">
+      <a href="https://github.com/brightersummerday" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://xiaotouming.blogspot.com/" target="_blank" rel="noopener">Blogger</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--color-line);
+    padding: var(--space-4) 0;
+    margin-top: var(--space-6);
+  }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .row p { margin: 0; font-size: 0.85rem; }
+  .social { display: flex; gap: var(--space-2); }
+  .social a { font-size: 0.85rem; color: var(--color-muted); }
+  .social a:hover { color: var(--color-accent); }
+</style>

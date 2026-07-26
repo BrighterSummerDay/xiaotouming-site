@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import { useTranslations } from '../../i18n/utils';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ id }) => id.startsWith('zh/'));
+  return posts.map((post) => ({
+    params: { slug: post.id.replace('zh/', '').replace(/\.md$/, '') },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+const lang = 'zh' as const;
+const t = useTranslations(lang);
+---
+
+<Layout lang={lang} title={`${post.data.title} · 小头明`} description={post.data.description}>
+  <article class="container post">
+    <a href="/blog" class="mono back-link" data-reveal>{t('blog.back')}</a>
+    <p class="mono post-date" data-reveal>{post.data.pubDate.toISOString().slice(0, 10)}</p>
+    <h1 data-reveal>{post.data.title}</h1>
+    <div class="prose" data-reveal>
+      <Content />
+    </div>
+  </article>
+</Layout>
+
+<style>
+  .post { padding: var(--space-5) 0; max-width: 42rem; }
+  .back-link { color: var(--color-accent); font-size: 0.85rem; }
+  .post-date { color: var(--color-muted); margin-top: var(--space-3); }
+  .prose { margin-top: var(--space-3); line-height: 1.8; }
+  .prose :global(p) { color: var(--color-ink); }
+</style>

@@ -1,0 +1,139 @@
+/* ==========================================================
+   设计 Token 系统 —— "工程师的数字笔记本"
+   ========================================================== */
+:root {
+  /* 色板：冷调纸白 + 墨黑 + 紫罗兰/薄荷 双色点缀 */
+  --color-bg: #EDEFF3;
+  --color-surface: #FFFFFF;
+  --color-ink: #12131A;
+  --color-muted: #5B6270;
+  --color-line: #D8DCE4;
+  --color-accent: #6D5BD0;      /* 紫罗兰：主强调色 */
+  --color-accent-soft: #E6E2FA;
+  --color-signal: #17B897;      /* 薄荷绿：状态/代码高亮 */
+
+  /* 字体 */
+  --font-display: 'Space Grotesk', 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+  --font-body: 'Inter', 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* 间距节奏 */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --space-5: 4rem;
+  --space-6: 7rem;
+
+  --radius: 10px;
+  --max-width: 1080px;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: auto; /* Lenis 接管平滑滚动 */
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 背景细网格纹理，呼应"笔记本"意象，克制不抢戏 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--color-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.35;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--space-2);
+}
+
+h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); line-height: 1.05; }
+h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); }
+
+p { color: var(--color-muted); margin: 0 0 var(--space-2); }
+
+a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+code, .mono {
+  font-family: var(--font-mono);
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+  position: relative;
+  z-index: 1;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-accent);
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.3rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--color-ink);
+  color: var(--color-surface);
+  transform: translateY(-2px);
+}
+
+.btn--accent {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #fff;
+}
+.btn--accent:hover {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+/* 可见的键盘焦点，避免为了美观牺牲可访问性 */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

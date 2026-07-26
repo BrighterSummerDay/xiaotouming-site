@@ -1,0 +1,34 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Hero from '../../components/Hero.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { useTranslations } from '../../i18n/utils';
+import { projects } from '../../data/projects';
+
+const lang = 'zh' as const;
+const t = useTranslations(lang);
+---
+
+<Layout lang={lang} title="小透铭 · 个人网站">
+  <Hero lang={lang} />
+
+  <section id="work" class="container work-section">
+    <h2 data-reveal>{t('work.title')}</h2>
+    <p data-reveal>{t('work.subtitle')}</p>
+    <div class="grid">
+      {projects.map((project) => (
+        <ProjectCard project={project} lang={lang} />
+      ))}
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .work-section { padding: var(--space-5) 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+</style>

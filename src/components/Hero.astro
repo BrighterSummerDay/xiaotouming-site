@@ -1,0 +1,29 @@
+---
+import TerminalIntro from './TerminalIntro.vue';
+import { useTranslations } from '../i18n/utils';
+import type { Lang } from '../i18n/ui';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const workHref = lang === 'zh' ? '#work' : '#work';
+---
+
+<section class="hero container">
+  <TerminalIntro client:load eyebrow={t('hero.eyebrow')} fullLine={t('hero.title')} />
+  <h1 class="hero-title" data-reveal>{t('hero.title')}</h1>
+  <p class="hero-subtitle" data-reveal>{t('hero.subtitle')}</p>
+  <a href={workHref} class="btn btn--accent" data-reveal>{t('hero.cta')}</a>
+</section>
+
+<style>
+  .hero {
+    padding: var(--space-6) 0 var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: flex-start;
+  }
+  .hero-title { margin-top: var(--space-3); }
+  .hero-subtitle { max-width: 32rem; font-size: 1.1rem; }
+</style>

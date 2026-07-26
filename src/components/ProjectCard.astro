@@ -1,0 +1,66 @@
+---
+import type { Project } from '../data/projects';
+import type { Lang } from '../i18n/ui';
+import { useTranslations } from '../i18n/utils';
+
+interface Props {
+  project: Project;
+  lang: Lang;
+}
+const { project, lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<article class="card" data-reveal>
+  <div class="card-top">
+    <span class="mono year">{project.year}</span>
+    <div class="tags">
+      {project.tags.map((tag) => <span class="tag mono">{tag}</span>)}
+    </div>
+  </div>
+  <h3>{project.title[lang]}</h3>
+  <p>{project.description[lang]}</p>
+  {(project.link || project.repo) && (
+    <div class="actions">
+      {project.link && (
+        <a href={project.link} target="_blank" rel="noopener" class="btn">{t('work.website')}</a>
+      )}
+      {project.repo && (
+        <a href={project.repo} target="_blank" rel="noopener" class="btn">{t('work.github')}</a>
+      )}
+    </div>
+  )}
+</article>
+
+<style>
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .year { color: var(--color-muted); font-size: 0.85rem; }
+  .tags { display: flex; gap: 0.4rem; }
+  .tag {
+    font-size: 0.7rem;
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+  }
+  .card h3 { font-size: 1.15rem; margin-bottom: 0.3rem; }
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: var(--space-1);
+  }
+</style>

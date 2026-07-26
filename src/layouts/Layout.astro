@@ -1,0 +1,90 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+import type { Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description?: string;
+}
+const { lang, title, description = '东京程序员的个人网站与博客' } = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+
+    <!-- 字体：Space Grotesk（标题）/ Inter（正文）/ JetBrains Mono（代码与技术细节） -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <ClientRouter />
+  </head>
+  <body>
+    <Header lang={lang} />
+    <main>
+      <slot />
+    </main>
+    <Footer lang={lang} />
+
+    <script>
+      import Lenis from 'lenis';
+      import { gsap } from 'gsap';
+      import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+      gsap.registerPlugin(ScrollTrigger);
+
+      function initSmoothScroll() {
+        const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+        function raf(time: number) {
+          lenis.raf(time);
+          requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+        lenis.on('scroll', ScrollTrigger.update);
+      }
+
+      function initScrollReveal() {
+        const items = document.querySelectorAll('[data-reveal]');
+        items.forEach((el, i) => {
+          gsap.fromTo(
+            el,
+            { opacity: 0, y: 24 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.6,
+              delay: i * 0.04,
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: el,
+                start: 'top 88%',
+                once: true,
+              },
+            }
+          );
+        });
+      }
+
+      // 首次加载 + 每次 View Transitions 导航后都要重新初始化
+      initSmoothScroll();
+      initScrollReveal();
+      document.addEventListener('astro:after-swap', () => {
+        ScrollTrigger.refresh();
+        initScrollReveal();
+      });
+    </script>
+  </body>
+</html>

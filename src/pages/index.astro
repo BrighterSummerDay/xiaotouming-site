@@ -1,0 +1,648 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+
+const welcomeData = [
+  {
+    lang: 'zh',
+    code: 'ZH',
+    label: '中文',
+    greeting: '你好',
+    title: '欢迎来到小透铭的个人网站',
+    subtitle: '开发日记 · 项目展示 · 个人博客',
+    href: '/zh',
+    desc: '探索中文项目展示、博客记录与关于页面',
+  },
+  {
+    lang: 'ja',
+    code: 'JA',
+    label: '日本語',
+    greeting: 'こんにちは',
+    title: '小透銘のウェブサイトへようこそ',
+    subtitle: '開発日誌 · プロジェクト紹介 · 個人ブログ',
+    href: '/ja',
+    desc: '日本語のプロジェクト展示とブログ記事を見る',
+  },
+  {
+    lang: 'en',
+    code: 'EN',
+    label: 'English',
+    greeting: 'Hello',
+    title: "Welcome to Xiaotouming's Website",
+    subtitle: 'Dev Diary · Project Showcase · Personal Blog',
+    href: '/en',
+    desc: 'Explore projects, blog posts, and about me in English',
+  },
+];
+---
+
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>xiaotouming · 欢迎访问 | Portal</title>
+    <meta name="description" content="小透铭的个人网站导航入口 - 请选择语言进入" />
+
+    <!-- 字体加载 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <ClientRouter />
+  </head>
+  <body class="portal-body">
+    <!-- 1. 脱离任何父容器的顶级全局 Logo（纯 CSS 保证从网页加载第 0 毫秒即居中常亮置顶） -->
+    <div id="brand-logo" class="mono brand-logo">$ xiaotouming<span>.site</span></div>
+
+    <!-- 2. 纸白极简开场幕布 (z-index: 9999) -->
+    <div id="portal-curtain" class="portal-curtain">
+      <div class="curtain-box mono">
+        <div class="curtain-logo-placeholder"></div>
+        <div id="curtain-bar-wrap" class="curtain-bar-wrap">
+          <div class="curtain-bar">
+            <div id="curtain-progress" class="curtain-progress"></div>
+          </div>
+          <span class="curtain-sub">INITIALIZING PORTAL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 背景渐变与微动效 -->
+    <div class="portal-bg-decor">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+    </div>
+
+    <!-- 4. 页面主体结构 -->
+    <main class="portal-container">
+      <header class="portal-header">
+        <!-- Logo 目标归位占位节点 -->
+        <div id="brand-logo-target" class="brand-logo-target"></div>
+      </header>
+
+      <!-- 动态三语欢迎动效区 -->
+      <section class="welcome-hero">
+        <h1 id="welcome-title" class="welcome-title">
+          {welcomeData[0].title}
+        </h1>
+
+        <p id="welcome-subtitle" class="welcome-subtitle">
+          {welcomeData[0].subtitle}
+        </p>
+      </section>
+
+      <!-- 语言选择卡片区 -->
+      <section id="lang-selection" class="lang-selection">
+        <p class="mono selection-hint">
+          请选择语言 / 言語を選択してください / SELECT LANGUAGE
+        </p>
+
+        <div class="cards-grid">
+          {welcomeData.map((item, index) => (
+            <a
+              href={item.href}
+              class:list={['lang-card', { 'is-active': index === 0 }]}
+              data-index={index}
+              data-lang={item.lang}
+            >
+              <div class="card-top">
+                <span class="mono card-code">{item.code}</span>
+              </div>
+              <div class="card-body">
+                <h2 class="card-label">{item.label}</h2>
+                <p class="card-greeting mono">{item.greeting} →</p>
+                <p class="card-desc">{item.desc}</p>
+              </div>
+              <div class="card-enter-btn mono">
+                <span>ENTER</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <footer id="portal-footer" class="portal-footer mono">
+        <span>© 2026 xiaotouming</span>
+        <span>Hand-built with Astro & GSAP</span>
+      </footer>
+    </main>
+
+    <script>
+      import { gsap } from 'gsap';
+
+      const welcomeData = [
+        {
+          title: '欢迎来到小透铭的个人网站',
+          subtitle: '开发日记 · 项目展示 · 个人博客',
+        },
+        {
+          title: '小透銘のウェブサイトへようこそ',
+          subtitle: '開発日誌 · プロジェクト紹介 · 個人ブログ',
+        },
+        {
+          title: "Welcome to Xiaotouming's Website",
+          subtitle: 'Dev Diary · Project Showcase · Personal Blog',
+        },
+      ];
+
+      let currentIndex = 0;
+      let timer: number | undefined;
+
+      function initPortal() {
+        if (timer) clearInterval(timer);
+        currentIndex = 0;
+
+        const brandLogo = document.getElementById('brand-logo');
+        const targetPlaceholder = document.getElementById('brand-logo-target');
+        const curtainEl = document.getElementById('portal-curtain');
+        const progressEl = document.getElementById('curtain-progress');
+        const barWrap = document.getElementById('curtain-bar-wrap');
+        const welcomeHero = document.querySelector('.welcome-hero');
+        const titleEl = document.getElementById('welcome-title');
+        const subtitleEl = document.getElementById('welcome-subtitle');
+        const langSelection = document.getElementById('lang-selection');
+        const footerEl = document.getElementById('portal-footer');
+        const cards = document.querySelectorAll('.lang-card');
+
+        if (!cards.length) return;
+
+        function updateWelcome(index: number, isManual = false) {
+          if (index === currentIndex && !isManual) return;
+          currentIndex = index;
+
+          cards.forEach((c, i) => {
+            if (i === index) {
+              c.classList.add('is-active');
+            } else {
+              c.classList.remove('is-active');
+            }
+          });
+
+          // 文字形态切换
+          gsap.timeline()
+            .to([titleEl, subtitleEl], {
+              opacity: 0,
+              y: -12,
+              filter: 'blur(10px)',
+              duration: 0.3,
+              stagger: 0.04,
+              ease: 'power2.in',
+              onComplete: () => {
+                if (titleEl) titleEl.textContent = welcomeData[index].title;
+                if (subtitleEl) subtitleEl.textContent = welcomeData[index].subtitle;
+              },
+            })
+            .fromTo(
+              [titleEl, subtitleEl],
+              { opacity: 0, y: 16, filter: 'blur(10px)' },
+              {
+                opacity: 1,
+                y: 0,
+                filter: 'blur(0px)',
+                duration: 0.55,
+                stagger: 0.08,
+                ease: 'power2.out',
+              }
+            );
+        }
+
+        function startAutoRotate() {
+          if (timer) clearInterval(timer);
+          timer = window.setInterval(() => {
+            const nextIdx = (currentIndex + 1) % welcomeData.length;
+            updateWelcome(nextIdx);
+          }, 3800);
+        }
+
+        cards.forEach((card, idx) => {
+          card.addEventListener('mouseenter', () => {
+            if (timer) clearInterval(timer);
+            updateWelcome(idx, true);
+          });
+
+          card.addEventListener('mouseleave', () => {
+            startAutoRotate();
+          });
+        });
+
+        // 动效核心：绝对对齐计算，开场动画全套播放完成后，才真正启动三语卡片轮播
+        if (brandLogo && targetPlaceholder && curtainEl && progressEl && barWrap) {
+          // 页面主体预先隐藏并稍微置上 (y: -24)
+          gsap.set([welcomeHero, langSelection, footerEl], {
+            opacity: 0,
+            y: -24,
+          });
+
+          // 重置 Logo 为纯 CSS 居中初始态
+          gsap.set(brandLogo, {
+            top: 'calc(50vh - 36px)',
+            left: '50vw',
+            xPercent: -50,
+            yPercent: -50,
+            fontSize: '1.5rem',
+            opacity: 1,
+          });
+
+          // 精确获取目标 Header 归位坐标
+          const targetRect = targetPlaceholder.getBoundingClientRect();
+
+          const tl = gsap.timeline({
+            onComplete: () => {
+              // 关键修复：开场全套动画全部落定沉淀之后，才启动语言轮播倒计时！
+              startAutoRotate();
+            },
+          });
+
+          // 步骤 1: 读条增长 (1.0s)，Logo 在最顶层居中 100% 清晰可见
+          tl.to(progressEl, {
+            width: '100%',
+            duration: 1.0,
+            ease: 'power2.inOut',
+          })
+          // 步骤 2: 进度条淡出 (0.35s)
+          .to(barWrap, {
+            opacity: 0,
+            y: 12,
+            duration: 0.35,
+            ease: 'power2.in',
+          }, '+=0.1')
+          // 步骤 3: Logo 优雅慢速滑归左上角 Header 目标点 (1.1s)
+          .to(brandLogo, {
+            top: `${targetRect.top}px`,
+            left: `${targetRect.left}px`,
+            xPercent: 0,
+            yPercent: 0,
+            fontSize: '1.25rem',
+            duration: 1.1,
+            ease: 'power3.inOut',
+          })
+          // 幕布同步淡隐 (0.9s)
+          .to(curtainEl, {
+            opacity: 0,
+            duration: 0.9,
+            ease: 'power2.out',
+            onComplete: () => {
+              curtainEl.style.display = 'none';
+            },
+          }, '-=0.9')
+          // 步骤 4: 由 Logo 领衔“自上而下”顺次沉稳舒缓展开
+          .to(welcomeHero, {
+            opacity: 1,
+            y: 0,
+            duration: 1.2,
+            ease: 'power2.out',
+          }, '-=0.2')
+          .to(langSelection, {
+            opacity: 1,
+            y: 0,
+            duration: 1.3,
+            ease: 'power2.out',
+          }, '-=0.7')
+          .to(footerEl, {
+            opacity: 1,
+            y: 0,
+            duration: 1.0,
+            ease: 'power2.out',
+          }, '-=0.7');
+        } else {
+          // 兜底全显并启动轮播
+          gsap.set([welcomeHero, langSelection, footerEl], { opacity: 1, y: 0 });
+          startAutoRotate();
+        }
+      }
+
+      // 支持 View Transitions
+      document.addEventListener('astro:page-load', initPortal);
+    </script>
+  </body>
+</html>
+
+<style>
+  .portal-body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* 顶级全局 Logo 样式 (最高 z-index，突破任何层级覆盖) */
+  #brand-logo {
+    position: fixed;
+    z-index: 10001;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-ink);
+    top: calc(50vh - 36px);
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    line-height: 1;
+    pointer-events: none;
+  }
+  #brand-logo span {
+    color: var(--color-accent);
+  }
+
+  /* 纸白极简开场幕布 (z-index: 9999) */
+  .portal-curtain {
+    position: fixed;
+    inset: 0;
+    background: var(--color-bg);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  .portal-curtain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--color-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.4;
+  }
+
+  .curtain-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .curtain-logo-placeholder {
+    font-size: 1.5rem;
+    height: 1.8rem;
+  }
+
+  .curtain-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .curtain-bar {
+    width: 180px;
+    height: 4px;
+    background: var(--color-line);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .curtain-progress {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-signal));
+    border-radius: 999px;
+  }
+
+  .curtain-sub {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    letter-spacing: 0.12em;
+  }
+
+  /* 背景浮动光晕 */
+  .portal-bg-decor {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.25;
+    animation: floatOrb 14s infinite alternate ease-in-out;
+  }
+  .orb-1 {
+    width: 420px;
+    height: 420px;
+    background: var(--color-accent);
+    top: 10%;
+    left: 15%;
+  }
+  .orb-2 {
+    width: 450px;
+    height: 450px;
+    background: var(--color-signal);
+    bottom: 10%;
+    right: 15%;
+    animation-delay: -7s;
+  }
+
+  @keyframes floatOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(45px, 35px) scale(1.12); }
+  }
+
+  .portal-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 980px;
+    padding: var(--space-4) var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .portal-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .brand-logo-target {
+    height: 1.5rem;
+    width: 180px;
+  }
+
+  /* Welcome Hero 动效展示 */
+  .welcome-hero {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-2);
+    min-height: 180px;
+    justify-content: center;
+  }
+
+  .welcome-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 4.8vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0;
+    color: var(--color-ink);
+    letter-spacing: -0.02em;
+  }
+
+  .welcome-subtitle {
+    font-size: clamp(1.05rem, 2.1vw, 1.3rem);
+    color: var(--color-muted);
+    margin: 0;
+    max-width: 650px;
+  }
+
+  /* 语言选择卡片网络 */
+  .lang-selection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .selection-hint {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: var(--space-3);
+    width: 100%;
+  }
+
+  .lang-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--space-3);
+    background: #ffffff;
+    border: 1.5px solid var(--color-line);
+    border-radius: calc(var(--radius) + 4px);
+    padding: var(--space-3);
+    text-decoration: none;
+    color: var(--color-ink);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.35s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    position: relative;
+    overflow: hidden;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .lang-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: transparent;
+    transition: background 0.3s ease;
+  }
+
+  .lang-card:hover, .lang-card.is-active {
+    transform: translateY(-8px) scale(1.015);
+    border-color: var(--color-accent);
+    background: #ffffff;
+    box-shadow: 0 16px 36px rgba(109, 91, 208, 0.16);
+  }
+
+  .lang-card:hover::before, .lang-card.is-active::before {
+    background: var(--color-accent);
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .card-code {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    background: var(--color-bg);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+  }
+
+  .card-label {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.2rem 0;
+    color: var(--color-ink);
+  }
+
+  .card-greeting {
+    font-size: 0.95rem;
+    color: var(--color-accent);
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .card-desc {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  .card-enter-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    padding-top: var(--space-2);
+    border-top: 1px dashed var(--color-line);
+    transition: color 0.2s ease;
+  }
+
+  .lang-card:hover .card-enter-btn {
+    color: var(--color-accent);
+  }
+
+  .lang-card:hover .card-enter-btn svg {
+    transform: translateX(4px);
+    transition: transform 0.2s ease;
+  }
+
+  .portal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--color-muted);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-line);
+  }
+
+  @media (max-width: 640px) {
+    .portal-container { gap: var(--space-4); }
+    .welcome-hero { min-height: 160px; padding: var(--space-2) 0; }
+    .portal-footer { flex-direction: column; gap: 0.4rem; text-align: center; }
+  }
+</style>

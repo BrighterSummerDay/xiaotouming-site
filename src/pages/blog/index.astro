@@ -1,0 +1,47 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import { useTranslations } from '../../i18n/utils';
+
+const lang = 'zh' as const;
+const t = useTranslations(lang);
+
+const posts = (await getCollection('blog', ({ id }) => id.startsWith('zh/')))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<Layout lang={lang} title="博客 · 小透铭">
+  <section class="container blog-section">
+    <h2 data-reveal>{t('blog.title')}</h2>
+    <p data-reveal>{t('blog.subtitle')}</p>
+
+    <ul class="post-list">
+      {posts.map((post) => {
+        const slug = post.id.replace('zh/', '').replace(/\.md$/, '');
+        return (
+          <li data-reveal>
+            <a href={`/blog/${slug}`}>
+              <span class="post-date mono">{post.data.pubDate.toISOString().slice(0, 10)}</span>
+              <h3>{post.data.title}</h3>
+              <p>{post.data.description}</p>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .blog-section { padding: var(--space-5) 0; }
+  .post-list { list-style: none; padding: 0; margin-top: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+  .post-list li {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+  }
+  .post-list a { display: block; }
+  .post-list h3 { margin: 0.3rem 0; }
+  .post-date { color: var(--color-accent); font-size: 0.8rem; }
+</style>
