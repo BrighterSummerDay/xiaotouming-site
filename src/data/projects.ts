@@ -12,7 +12,7 @@ export const projects: Project[] = [
   {
     id: 'this-site',
     year: '2026',
-    repo: 'https://github.com/brightersummerday',
+    repo: 'https://github.com/BrighterSummerDay/xiaotouming-site',
     title: {
       zh: '个人网站2.0(这个网站)',
       ja: '個人ウェブサイト2.0(このサイト)',
@@ -28,6 +28,7 @@ export const projects: Project[] = [
   {
     id: 'placeholder-1',
     year: '2025',
+    repo: 'https://github.com/BrighterSummerDay/Xiaotouming',
     link: 'https://brightersummerday.github.io/Xiaotouming/',
     title: {
       zh: '个人网站1.0',
@@ -39,6 +40,23 @@ export const projects: Project[] = [
       ja: '個人ウェブサイト1.0、無料のウェブサイトテンプレートを使用、Githubにデプロイ、完全静的なサイト',
       en: 'My personal website version 1.0, used a free website template, deployed on Github, completely static',
     },
-    tags: ['Html'],
+    tags: ['Html', 'GitHub'],
+  },
+  {
+    id: 'placeholder-2',
+    year: '2025',
+    repo: 'https://github.com/BrighterSummerDay/vlogverse',
+    link: 'https://vlogverse-puce.vercel.app/youtube',
+    title: {
+      zh: 'vlogverse v0.5',
+      ja: 'vlogverse v0.5',
+      en: 'vlogverse v0.5',
+    },
+    description: {
+      zh: '使用 Nextjs 搭建的视频聚合网站，还在开发中。',
+      ja: 'Next.jsで構築した動画集約サイトです。現在開発中です。',
+      en: 'A video aggregation website built with Next.js. Currently in development.',
+    },
+    tags: ['Nextjs', 'Supabase', 'Tailwindcss', 'Vercel'],
   },
 ];
