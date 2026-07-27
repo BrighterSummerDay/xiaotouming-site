@@ -57,6 +57,6 @@ export const projects: Project[] = [
       ja: 'Next.jsで構築した動画集約サイトです。現在開発中です。',
       en: 'A video aggregation website built with Next.js. Currently in development.',
     },
-    tags: ['Nextjs', 'Supabase', 'Tailwindcss', 'Vercel'],
+    tags: ['Nextjs', 'Supabase', 'Vercel'],
   },
 ];
