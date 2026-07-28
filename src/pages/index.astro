@@ -241,6 +241,9 @@ const welcomeData = [
             y: -24,
           });
 
+          // 动画播完之前，禁止交互（避免点到还没显形的卡片）
+          langSelection?.setAttribute('inert', '');
+
           // 重置 Logo 为纯 CSS 居中初始态
           gsap.set(brandLogo, {
             top: 'calc(50vh - 36px)',
@@ -256,7 +259,10 @@ const welcomeData = [
 
           const tl = gsap.timeline({
             onComplete: () => {
-              // 关键修复：开场全套动画全部落定沉淀之后，才启动语言轮播倒计时！
+              // 动画播完，恢复卡片可交互
+              langSelection?.removeAttribute('inert');
+              
+              // 开场全套动画全部落定沉淀之后，才启动语言轮播倒计时！
               startAutoRotate();
             },
           });
