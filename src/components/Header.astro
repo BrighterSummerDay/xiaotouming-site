@@ -15,7 +15,7 @@ const navBlog = lang === 'zh' ? '/blog' : `/${lang}/blog`;
 
 <header class="site-header">
   <div class="container bar">
-    <a href={navHome} class="mono brand">xiaotouming</a>
+    <a href={navHome} class="mono brand">$ xiaotouming<span class="brand-suffix">.site</span></a>
 
     <nav class="links">
       <a href={navHome}>{t('nav.work')}</a>
@@ -54,6 +54,9 @@ const navBlog = lang === 'zh' ? '/blog' : `/${lang}/blog`;
   .brand {
     font-weight: 600;
     color: var(--color-ink);
+  }
+  .brand-suffix {
+    color: var(--color-accent);
   }
   .links {
     display: flex;

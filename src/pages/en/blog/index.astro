@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Layout from '../../../layouts/Layout.astro';
 import { useTranslations } from '../../../i18n/utils';
+import ScrollHint from '../../../components/ScrollHint.astro';
 
 const lang = 'en' as const;
 const t = useTranslations(lang);
@@ -29,6 +30,7 @@ const posts = (await getCollection('blog', ({ id }) => id.startsWith('en/')))
         );
       })}
     </ul>
+    <ScrollHint endText="── That is all. ──" />
   </section>
 </Layout>
 

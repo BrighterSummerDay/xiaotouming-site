@@ -1,0 +1,86 @@
+---
+// src/components/ScrollHint.astro
+interface Props {
+  endText: string;
+}
+const { endText } = Astro.props;
+---
+
+<div class="scroll-hint" id="scroll-hint" aria-hidden="true">
+  <span class="mono">↓ scroll</span>
+</div>
+<p class="end-marker" id="scroll-end-marker">{endText}</p>
+
+<style>
+  .scroll-hint {
+    position: fixed;
+    left: 50%;
+    bottom: 1.5rem;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+    color: var(--color-accent);
+    font-size: 0.8rem;
+    box-shadow: 0 4px 12px rgba(18, 19, 26, 0.08);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 40;
+  }
+  .scroll-hint.visible {
+    opacity: 1;
+    animation: bob 1.6s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(4px); }
+  }
+  .end-marker {
+    text-align: center;
+    color: var(--color-muted);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    margin-top: var(--space-4);
+  }
+  .end-marker.visible { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-hint.visible { animation: none; }
+  }
+</style>
+
+<script>
+  function initScrollHint() {
+    const hint = document.getElementById('scroll-hint');
+    const marker = document.getElementById('scroll-end-marker');
+    if (!hint || !marker) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          hint.classList.remove('visible');
+          marker.classList.add('visible');
+        } else {
+          hint.classList.add('visible');
+          marker.classList.remove('visible');
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(marker);
+
+    if (document.documentElement.scrollHeight <= window.innerHeight + 40) {
+      hint.classList.remove('visible');
+    }
+  }
+
+  initScrollHint();
+  document.addEventListener('astro:after-swap', initScrollHint);
+</script>
