@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
+import WarpedGrid from '../components/WarpedGrid.astro';
 
 const welcomeData = [
   {
@@ -56,6 +57,8 @@ const welcomeData = [
     <ClientRouter />
   </head>
   <body class="portal-body">
+    <WarpedGrid mode="fixed" />
+
     <!-- 1. 脱离任何父容器的顶级全局 Logo（纯 CSS 保证从网页加载第 0 毫秒即居中常亮置顶） -->
     <div id="brand-logo" class="mono brand-logo">$ xiaotouming<span>.site</span></div>
 
@@ -335,10 +338,11 @@ const welcomeData = [
   .portal-body {
     margin: 0;
     min-height: 100vh;
-    background: var(--color-bg);
+    background: var(--page-gradient-1), var(--page-gradient-2), var(--color-bg);
     color: var(--color-ink);
     font-family: var(--font-body);
     display: flex;
+    isolation: isolate;
     justify-content: center;
     align-items: center;
     position: relative;
@@ -367,7 +371,10 @@ const welcomeData = [
   .portal-curtain {
     position: fixed;
     inset: 0;
-    background: var(--color-bg);
+    background:
+      var(--page-gradient-1),
+      var(--page-gradient-2),
+      var(--color-bg);
     z-index: 9999;
     display: flex;
     justify-content: center;

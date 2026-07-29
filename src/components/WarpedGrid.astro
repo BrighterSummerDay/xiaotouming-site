@@ -1,0 +1,343 @@
+---
+// WarpedGrid.astro
+// 交互式网格背景：鼠标靠近时局部网格线平滑形变 + 颜色渐变
+
+export interface Props {
+  mode?: 'fixed' | 'contained'; // fixed:铺满视口固定背景 contained:铺满最近的relative父容器
+  spacing?: number;             // 网格间距 px，默认对齐 48px
+  radiusInCells?: number;       // 形变影响半径，以"格子数"为单位
+  strength?: number;            // 形变强度 px
+}
+
+const {
+  mode = 'fixed',
+  spacing = 48,
+  radiusInCells = 5,
+  strength = 20,
+} = Astro.props;
+---
+
+<canvas
+  class="warped-grid"
+  data-spacing={spacing}
+  data-radius-cells={radiusInCells}
+  data-strength={strength}
+  data-mode={mode}
+  aria-hidden="true"
+></canvas>
+
+<style define:vars={{ mode }}>
+  .warped-grid {
+    display: block;
+    pointer-events: none;
+  }
+
+  .warped-grid[data-mode='fixed'] {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+  }
+
+  .warped-grid[data-mode='contained'] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+</style>
+
+<script>
+  function initWarpedGrid(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const SPACING = parseInt(canvas.dataset.spacing || '48', 10);
+    const RADIUS_CELLS = parseFloat(canvas.dataset.radiusCells || '2.5');
+    const STRENGTH = parseFloat(canvas.dataset.strength || '22');
+    const SAMPLE = Math.max(3, Math.round(SPACING / 12));
+    const RADIUS = SPACING * RADIUS_CELLS;
+    const mode = canvas.dataset.mode || 'fixed';
+
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+
+    // 颜色读取自全局 CSS 变量，主题改色时这里自动跟着变
+    const rootStyles = getComputedStyle(document.documentElement);
+    const lineColor = (rootStyles.getPropertyValue('--color-line') || '#D8DCE4').trim();
+    const accentColor = (rootStyles.getPropertyValue('--color-accent') || '#6D5BD0').trim();
+    const bgColor = (rootStyles.getPropertyValue('--color-bg') || '#EDEFF3').trim();
+
+    let w = 0, h = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let running = false;
+    let rafId: number | null = null;
+
+    let mouse = { x: -9999, y: -9999 };
+    let smoothMouse = { x: -9999, y: -9999 };
+    let trailPoints: Array<{ x: number; y: number; life: number }> = [];
+
+    function resize() {
+      const parent = mode === 'fixed' ? document.documentElement : canvas.parentElement;
+      const rect = mode === 'fixed'
+        ? { width: window.innerWidth, height: window.innerHeight }
+        : (parent as HTMLElement).getBoundingClientRect();
+      w = rect.width;
+      h = rect.height;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function onPointerMove(e: MouseEvent | TouchEvent) {
+      const rect = canvas.getBoundingClientRect();
+      const point = 'touches' in e ? e.touches[0] : e;
+      if (!point) return;
+
+      const nextX = point.clientX - rect.left;
+      const nextY = point.clientY - rect.top;
+
+      mouse.x = nextX;
+      mouse.y = nextY;
+
+      trailPoints.push({ x: nextX, y: nextY, life: 1 });
+      if (trailPoints.length > 5) trailPoints.shift();
+    }
+
+    function onPointerLeave() {
+      mouse.x = -9999;
+      mouse.y = -9999;
+    }
+
+    function smoothstep(t: number) {
+      return t * t * (3 - 2 * t);
+    }
+
+    function warp(px: number, py: number) {
+      let offsetX = 0;
+      let offsetY = 0;
+
+      const dx = px - smoothMouse.x;
+      const dy = py - smoothMouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < RADIUS && dist !== 0) {
+        const force = smoothstep(1 - dist / RADIUS);
+        const angle = Math.atan2(dy, dx);
+        offsetX += Math.cos(angle) * force * STRENGTH;
+        offsetY += Math.sin(angle) * force * STRENGTH;
+      }
+
+      trailPoints.forEach((point, index) => {
+        const tx = px - point.x;
+        const ty = py - point.y;
+        const trailDist = Math.sqrt(tx * tx + ty * ty);
+        if (trailDist >= RADIUS || trailDist === 0) return;
+
+        const trailForce = smoothstep(1 - trailDist / RADIUS) * point.life;
+        const trailAngle = Math.atan2(ty, tx);
+        const weight = index === 0 ? 0.35 : 0.18;
+        offsetX += Math.cos(trailAngle) * trailForce * STRENGTH * weight;
+        offsetY += Math.sin(trailAngle) * trailForce * STRENGTH * weight;
+      });
+
+      return { x: px + offsetX, y: py + offsetY };
+    }
+
+    function makeGradient(): string | CanvasGradient {
+      if (smoothMouse.x < -500) return lineColor;
+      const grad = ctx!.createRadialGradient(
+        smoothMouse.x, smoothMouse.y, 0,
+        smoothMouse.x, smoothMouse.y, RADIUS
+      );
+      grad.addColorStop(0, accentColor);
+      grad.addColorStop(1, lineColor);
+      return grad;
+    }
+
+    function drawLine(points: { x: number; y: number }[], gradient: string | CanvasGradient) {
+      ctx!.beginPath();
+      ctx!.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length - 1; i++) {
+        const midX = (points[i].x + points[i + 1].x) / 2;
+        const midY = (points[i].y + points[i + 1].y) / 2;
+        ctx!.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
+      }
+      ctx!.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+      ctx!.strokeStyle = gradient;
+      ctx!.lineWidth = 1.2;
+      ctx!.globalAlpha = 0.6;
+      ctx!.stroke();
+    }
+
+    function drawBackground() {
+      ctx!.fillStyle = bgColor;
+      ctx!.fillRect(0, 0, w, h);
+
+      const pageGradient = ctx!.createRadialGradient(
+        w * 0.1,
+        h * 0.2,
+        0,
+        w * 0.1,
+        h * 0.2,
+        Math.max(w, h) * 0.35
+      );
+      pageGradient.addColorStop(0, 'rgba(109, 91, 208, 0.22)');
+      pageGradient.addColorStop(1, 'transparent');
+      ctx!.globalAlpha = 0.92;
+      ctx!.fillStyle = pageGradient;
+      ctx!.fillRect(0, 0, w, h);
+
+      const pageGradient2 = ctx!.createRadialGradient(
+        w * 0.9,
+        h * 0.8,
+        0,
+        w * 0.9,
+        h * 0.8,
+        Math.max(w, h) * 0.32
+      );
+      pageGradient2.addColorStop(0, 'rgba(23, 184, 151, 0.18)');
+      pageGradient2.addColorStop(1, 'transparent');
+      ctx!.globalAlpha = 0.9;
+      ctx!.fillStyle = pageGradient2;
+      ctx!.fillRect(0, 0, w, h);
+      ctx!.globalAlpha = 1;
+    }
+
+    function drawStaticGrid() {
+      drawBackground();
+      ctx!.strokeStyle = lineColor;
+      ctx!.lineWidth = 1;
+      ctx!.globalAlpha = 0.6;
+      for (let x = 0; x <= w; x += SPACING) {
+        ctx!.beginPath();
+        ctx!.moveTo(x, 0);
+        ctx!.lineTo(x, h);
+        ctx!.stroke();
+      }
+      for (let y = 0; y <= h; y += SPACING) {
+        ctx!.beginPath();
+        ctx!.moveTo(0, y);
+        ctx!.lineTo(w, y);
+        ctx!.stroke();
+      }
+      ctx!.globalAlpha = 1;
+    }
+
+    function frame() {
+      if (!running) return;
+
+      smoothMouse.x += (mouse.x - smoothMouse.x) * 0.15;
+      smoothMouse.y += (mouse.y - smoothMouse.y) * 0.15;
+
+      trailPoints.forEach((point) => {
+        point.life *= 0.92;
+      });
+      while (trailPoints.length && trailPoints[0].life < 0.04) {
+        trailPoints.shift();
+      }
+
+      drawBackground();
+
+      const gradient = makeGradient();
+      const pad = RADIUS + SPACING;
+      const minX = smoothMouse.x - pad, maxX = smoothMouse.x + pad;
+      const minY = smoothMouse.y - pad, maxY = smoothMouse.y + pad;
+
+      for (let x = 0; x <= w; x += SPACING) {
+        const points = [];
+        for (let y = 0; y <= h; y += SAMPLE) {
+          points.push(
+            x >= minX && x <= maxX && y >= minY && y <= maxY
+              ? warp(x, y)
+              : { x, y }
+          );
+        }
+        drawLine(points, gradient);
+      }
+
+      for (let y = 0; y <= h; y += SPACING) {
+        const points = [];
+        for (let x = 0; x <= w; x += SAMPLE) {
+          points.push(
+            x >= minX && x <= maxX && y >= minY && y <= maxY
+              ? warp(x, y)
+              : { x, y }
+          );
+        }
+        drawLine(points, gradient);
+      }
+
+      ctx!.globalAlpha = 1;
+      rafId = requestAnimationFrame(frame);
+    }
+
+    function start() {
+      if (running) return;
+      running = true;
+      if (prefersReducedMotion) {
+        // 尊重用户的减少动效设置：只画一次静态网格，不绑定鼠标交互，不起动画循环
+        drawStaticGrid();
+        return;
+      }
+      window.addEventListener('mousemove', onPointerMove);
+      window.addEventListener('touchmove', onPointerMove, { passive: true });
+      window.addEventListener('mouseleave', onPointerLeave);
+      rafId = requestAnimationFrame(frame);
+    }
+
+    function stop() {
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('mousemove', onPointerMove);
+      window.removeEventListener('touchmove', onPointerMove);
+      window.removeEventListener('mouseleave', onPointerLeave);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    // 只有画布进入可视区域时才真正运行动画循环，省电省性能
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) start();
+        else stop();
+      },
+      { threshold: 0 }
+    );
+    observer.observe(canvas);
+  }
+
+  // 记录当前活跃实例的清理函数，页面切换前先清干净，避免残留的动画循环
+  // 和绑定在 window 上的事件监听器堆积（每次语言切换都会新增一份）
+  const activeCleanups: (() => void)[] = [];
+
+  function setupAll() {
+    // 先清理上一次导航遗留下来的实例
+    activeCleanups.forEach((fn) => fn());
+    activeCleanups.length = 0;
+
+    document
+      .querySelectorAll<HTMLCanvasElement>('.warped-grid')
+      .forEach((canvas) => {
+        const cleanup = initWarpedGrid(canvas);
+        if (cleanup) activeCleanups.push(cleanup);
+      });
+  }
+
+  // astro:page-load 在首次加载和每次 View Transitions 导航后都会触发，
+  // 直接在顶层跑一次的写法在切换语言（客户端路由）后不会重新执行，
+  // 必须挂在这个事件上才能保证每次切换后都重新初始化。
+  document.addEventListener('astro:page-load', setupAll);
+
+  // 双保险：导航开始、旧 DOM 即将被替换前，主动停掉正在跑的动画循环，
+  // 防止指向已被移除的 canvas 的 requestAnimationFrame 继续空转。
+  document.addEventListener('astro:before-swap', () => {
+    activeCleanups.forEach((fn) => fn());
+    activeCleanups.length = 0;
+  });
+</script>

@@ -10,7 +10,7 @@ const t = useTranslations(lang);
 const currentPath = Astro.url.pathname;
 
 const navHome = `/${lang}`;
-const navBlog = lang === 'zh' ? '/blog' : `/${lang}/blog`;
+const navBlog = `/${lang}/blog`;
 ---
 
 <header class="site-header">
@@ -40,9 +40,11 @@ const navBlog = lang === 'zh' ? '/blog' : `/${lang}/blog`;
     position: sticky;
     top: 0;
     z-index: 50;
-    backdrop-filter: blur(8px);
-    background: rgba(237, 239, 243, 0.85);
-    border-bottom: 1px solid var(--color-line);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    background: rgba(255, 255, 255, 0.42);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
   }
   .bar {
     display: flex;

@@ -24,10 +24,6 @@ export function getLocalizedPath(currentPath: string, currentLang: Lang, targetL
   if (cleanPath === '/') {
     return `/${targetLang}`;
   }
-  
-  if (targetLang === defaultLang && !currentPath.startsWith('/zh')) {
-    return cleanPath;
-  }
-  
+
   return `/${targetLang}${cleanPath.startsWith('/') ? cleanPath : '/' + cleanPath}`;
 }
