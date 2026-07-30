@@ -25,6 +25,6 @@ lang: zh
 
 推理小説終究是空想者們的寂寞狂歡罷了。
 
-p.s. 
-诡计集成 https://book.douban.com/subject/35894511/
-江户川乱步短篇集 https://www.web.nhk/tv/pl/series-tep-4J547QMM9G
+p.s.
+ [诡计集成 豆瓣](https://book.douban.com/subject/35894511/) 
+ [江户川乱步短篇集](https://www.web.nhk/tv/pl/series-tep-4J547QMM9G) 

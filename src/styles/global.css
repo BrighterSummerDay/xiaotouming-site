@@ -80,6 +80,43 @@ h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); }
 /* 段落风格：全局统一正文色与底部间距 */
 p { color: var(--color-muted); margin: 0 0 var(--space-2); }
 
+/* 正文中的链接与长 URL 允许自然换行 */
+.prose a,
+.prose p,
+.prose li {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.prose a {
+  color: var(--color-accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(109, 91, 208, 0.35);
+  padding-bottom: 0.08em;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.prose a:hover {
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+/* 引用样式：与站点整体风格一致的温和强调 */
+.prose blockquote {
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid var(--color-accent);
+  background: rgba(109, 91, 208, 0.03);
+  color: var(--color-ink);
+  font-style: italic;
+  border-radius: 8px;
+}
+
+.prose blockquote p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
 /* 链接基础样式：默认不显示下划线 */
 a {
   color: var(--color-ink);

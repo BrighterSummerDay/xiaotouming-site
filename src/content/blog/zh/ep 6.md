@@ -15,4 +15,4 @@ lang: zh
 
 我也拼了命的想要成爲讓人們喜愛的娃娃啊。
 
-P.S.2021日本包裝設計大賽受賞作品 https://www.jpda.or.jp/award/2661.html
+P.S. [2021日本包裝設計大賽受賞作品](https://www.jpda.or.jp/award/2661.html) 
