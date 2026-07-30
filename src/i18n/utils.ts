@@ -13,16 +13,27 @@ export function useTranslations(lang: Lang) {
 }
 
 export function getLocalizedPath(currentPath: string, currentLang: Lang, targetLang: Lang): string {
-  let cleanPath = currentPath;
-  for (const l of Object.keys(ui)) {
-    if (cleanPath === `/${l}` || cleanPath.startsWith(`/${l}/`)) {
-      cleanPath = cleanPath.slice(l.length + 1) || '/';
-      break;
+  const normalizedPath = currentPath.replace(/\/+$/, '') || '/';
+  const localePrefix = `/${currentLang}`;
+
+  let cleanPath = normalizedPath;
+  if (cleanPath === localePrefix || cleanPath.startsWith(`${localePrefix}/`)) {
+    cleanPath = cleanPath.slice(localePrefix.length) || '/';
+  } else {
+    for (const l of Object.keys(ui)) {
+      if (cleanPath === `/${l}` || cleanPath.startsWith(`/${l}/`)) {
+        cleanPath = cleanPath.slice(l.length + 1) || '/';
+        break;
+      }
     }
   }
 
+  if (cleanPath === '/blog' || cleanPath.startsWith('/blog/')) {
+    return `/${targetLang}/blog/`;
+  }
+
   if (cleanPath === '/') {
-    return `/${targetLang}`;
+    return `/${targetLang}/`;
   }
 
   return `/${targetLang}${cleanPath.startsWith('/') ? cleanPath : '/' + cleanPath}`;
