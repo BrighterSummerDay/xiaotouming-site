@@ -10,6 +10,23 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    id: 'SkiPick',
+    year: '2026',
+    repo: 'https://github.com/BrighterSummerDay/SkiPick',
+    link: 'https://ski-pick.vercel.app/',
+    title: {
+      zh: '日本滑雪场地图化网站 demo',
+      ja: 'スキー場比較サイト デモ',
+      en: 'Ski Resort Comparison Website demo',
+    },
+    description: {
+      zh: '日本滑雪场地图化及对比网站，地图采用MaptilerAPI构建，可以对多个雪场进行横向对比。正在积极开发中。',
+      ja: '複数のスキー場を横断比較できるウェブサイト。マップはMaptilerAPIで構築し、複数のスキー場を比較できます。積極 的に開発中。',
+      en: 'A website that allows you to compare multiple ski resorts horizontally, built with MaptilerAPI. Actively under development.',
+    },
+    tags: ['Next.js', 'React', 'Maptiler'],
+  },
+  {
     id: 'this-site',
     year: '2026',
     repo: 'https://github.com/BrighterSummerDay/xiaotouming-site',
@@ -53,10 +70,10 @@ export const projects: Project[] = [
       en: 'vlogverse v0.5',
     },
     description: {
-      zh: '使用 Nextjs 搭建的视频聚合网站，还在开发中。',
-      ja: 'Next.jsで構築した動画集約サイトです。現在開発中です。',
-      en: 'A video aggregation website built with Next.js. Currently in development.',
+      zh: '使用 Next.js 搭建的视频聚合网站，由于api问题无限期延期中。',
+      ja: 'Next.jsで構築した動画集約サイトです。api問題で開発は停滞しています。',
+      en: 'A video aggregation website built with Next.js. Development is on hold due to API issues.',
     },
-    tags: ['Nextjs', 'Supabase', 'Vercel'],
+    tags: ['Next.js', 'Supabase', 'Vercel'],
   },
 ];

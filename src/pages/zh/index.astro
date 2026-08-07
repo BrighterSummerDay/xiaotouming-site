@@ -4,7 +4,7 @@ import Hero from '../../components/Hero.astro';
 import ProjectCard from '../../components/ProjectCard.astro';
 import { useTranslations } from '../../i18n/utils';
 import { projects } from '../../data/projects';
-import ScrollHint from '../../../components/ScrollHint.astro';
+import ScrollHint from '../../components/ScrollHint.astro';
 
 const lang = 'zh' as const;
 const t = useTranslations(lang);
@@ -21,6 +21,7 @@ const t = useTranslations(lang);
         <ProjectCard project={project} lang={lang} />
       ))}
     </div>
+    <ScrollHint endText="── 已经到底了 ──" />
   </section>
 </Layout>
 
