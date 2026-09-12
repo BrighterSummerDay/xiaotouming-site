@@ -58,30 +58,50 @@ const t = useTranslations(lang);
     transition: background 0.3s ease;
   }
 
-  .card:hover, .card.is-active {
-    transform: translateY(-8px) scale(1.015) !important;
-    border-color: var(--color-accent);
-    background: #ffffff;
-    box-shadow: 0 16px 36px rgba(109, 91, 208, 0.16);
+  /* 仅在鼠标指针设备下触发 Hover 悬浮放大 */
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover, .card.is-active {
+      transform: translateY(-8px) scale(1.015) !important;
+      border-color: var(--color-accent);
+      background: #ffffff;
+      box-shadow: 0 16px 36px rgba(109, 91, 208, 0.16);
+    }
+
+    .card:hover::before, .card.is-active::before {
+      background: var(--color-accent);
+    }
   }
 
-  .card:hover::before, .card.is-active::before {
-    background: var(--color-accent);
+  /* 触控设备专属：按压反馈与常态卡片激活 */
+  @media (hover: none) {
+    .card:active {
+      transform: scale(0.985);
+      border-color: var(--color-accent);
+    }
+    .card.is-active {
+      border-color: var(--color-accent);
+      box-shadow: 0 8px 24px rgba(109, 91, 208, 0.12);
+    }
+    .card.is-active::before {
+      background: var(--color-accent);
+    }
   }
 
   .card-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.5rem;
   }
   .year { color: var(--color-muted); font-size: 0.85rem; }
-  .tags { display: flex; gap: 0.4rem; }
+  .tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
   .tag {
     font-size: 0.7rem;
     background: var(--color-accent-soft);
     color: var(--color-accent);
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
+    white-space: nowrap;
   }
   .card h3 { font-size: 1.15rem; margin-bottom: 0.3rem; }
   .actions {
@@ -89,5 +109,17 @@ const t = useTranslations(lang);
     gap: 0.5rem;
     flex-wrap: wrap;
     margin-top: auto;
+    padding-top: var(--space-2);
+  }
+
+  @media (max-width: 640px) {
+    .card {
+      padding: 1.15rem;
+    }
+    .actions .btn {
+      flex: 1 1 auto;
+      text-align: center;
+      justify-content: center;
+    }
   }
 </style>

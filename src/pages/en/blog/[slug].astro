@@ -29,9 +29,39 @@ const t = useTranslations(lang);
 </Layout>
 
 <style>
-  .post { padding: var(--space-5) 0; max-width: 42rem; }
-  .back-link { color: var(--color-accent); font-size: 0.85rem; }
+  .post { padding-top: var(--space-5); padding-bottom: var(--space-5); max-width: 42rem; }
+  .back-link {
+    color: var(--color-accent);
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0.2rem 0;
+    touch-action: manipulation;
+  }
+  .back-link:hover { color: var(--color-ink); }
   .post-date { color: var(--color-muted); margin-top: var(--space-3); }
   .prose { margin-top: var(--space-3); line-height: 1.8; }
   .prose :global(p) { color: var(--color-ink); }
+
+  @media (max-width: 640px) {
+    .post {
+      padding-top: var(--space-3);
+      padding-bottom: var(--space-5);
+    }
+    .post-date {
+      margin-top: var(--space-2);
+      font-size: 0.8rem;
+    }
+    .post h1 {
+      font-size: clamp(1.6rem, 6.5vw, 2.1rem);
+      line-height: 1.25;
+      margin-top: 0.2rem;
+    }
+    .prose {
+      margin-top: var(--space-2);
+      line-height: 1.75;
+      font-size: 0.96rem;
+    }
+  }
 </style>

@@ -35,9 +35,30 @@ const posts = (await getCollection('blog', ({ id }) => id.startsWith('en/')))
 </Layout>
 
 <style>
-  .blog-section { padding: var(--space-5) 0; }
+  .blog-section { padding-top: var(--space-5); padding-bottom: var(--space-5); }
   .post-list { list-style: none; padding: 0; margin-top: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
   .post-list a { display: block; }
   .post-list h3 { margin: 0.3rem 0; }
   .post-date { color: var(--color-accent); font-size: 0.8rem; }
+
+  @media (max-width: 640px) {
+    .blog-section {
+      padding-top: var(--space-3);
+      padding-bottom: var(--space-4);
+    }
+    .post-list {
+      margin-top: var(--space-3);
+      gap: 0.9rem;
+    }
+    .post-list li {
+      padding: 1.15rem;
+    }
+    .post-list h3 {
+      font-size: 1.12rem;
+      line-height: 1.35;
+    }
+    .post-list p {
+      font-size: 0.88rem;
+    }
+  }
 </style>

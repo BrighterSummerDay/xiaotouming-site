@@ -114,6 +114,11 @@ const {
       mouse.y = -9999;
     }
 
+    function onTouchEnd() {
+      mouse.x = -9999;
+      mouse.y = -9999;
+    }
+
     function smoothstep(t: number) {
       return t * t * (3 - 2 * t);
     }
@@ -286,6 +291,8 @@ const {
       }
       window.addEventListener('mousemove', onPointerMove);
       window.addEventListener('touchmove', onPointerMove, { passive: true });
+      window.addEventListener('touchend', onTouchEnd, { passive: true });
+      window.addEventListener('touchcancel', onTouchEnd, { passive: true });
       window.addEventListener('mouseleave', onPointerLeave);
       rafId = requestAnimationFrame(frame);
     }
@@ -295,6 +302,8 @@ const {
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('mousemove', onPointerMove);
       window.removeEventListener('touchmove', onPointerMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('mouseleave', onPointerLeave);
     }
 
@@ -310,6 +319,13 @@ const {
       { threshold: 0 }
     );
     observer.observe(canvas);
+
+    // 返回清理函数供 View Transitions 销毁旧实例
+    return () => {
+      stop();
+      observer.disconnect();
+      window.removeEventListener('resize', resize);
+    };
   }
 
   // 记录当前活跃实例的清理函数，页面切换前先清干净，避免残留的动画循环

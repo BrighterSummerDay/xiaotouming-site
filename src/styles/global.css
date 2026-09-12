@@ -28,6 +28,11 @@
   --radius: 10px;
   --max-width: 1080px;
 
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+
   --page-gradient-1: radial-gradient(circle at 10% 20%, rgba(109, 91, 208, 0.22), transparent 30%);
   --page-gradient-2: radial-gradient(circle at 90% 80%, rgba(23, 184, 151, 0.18), transparent 32%);
 }
@@ -37,6 +42,7 @@
 
 html {
   scroll-behavior: auto; /* Lenis 接管平滑滚动 */
+  overflow-x: clip;
 }
 
 body {
@@ -48,6 +54,8 @@ body {
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: clip;
 }
 
 /* 背景细网格纹理，呼应"笔记本"意象，克制不抢戏 */
@@ -117,6 +125,76 @@ p { color: var(--color-muted); margin: 0 0 var(--space-2); }
   color: var(--color-muted);
 }
 
+/* 代码块：移动端横向平滑滚动防溢出，深色极客质感 */
+.prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-line);
+  background: #181922;
+  color: #EDEFF3;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  margin: 1.4rem 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.prose pre code {
+  background: transparent !important;
+  padding: 0 !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  word-break: normal;
+  white-space: pre;
+}
+
+/* 行内代码 */
+.prose code:not(pre code) {
+  background: rgba(109, 91, 208, 0.08);
+  color: var(--color-accent);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.88em;
+  word-break: break-word;
+}
+
+/* 表格：移动端自适应滚动，杜绝撑破容器 */
+.prose table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.prose th, .prose td {
+  border: 1px solid var(--color-line);
+  padding: 0.6rem 0.9rem;
+  text-align: left;
+}
+
+.prose th {
+  background: rgba(0, 0, 0, 0.03);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* 文章图片自适应 */
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  display: block;
+  margin: 1.5rem auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
 /* 链接基础样式：默认不显示下划线 */
 a {
   color: var(--color-ink);
@@ -128,11 +206,12 @@ code, .mono {
   font-family: var(--font-mono);
 }
 
-/* 页面容器：统一最大宽度与水平内边距 */
+/* 页面容器：统一最大宽度与水平内边距（左右留白有保障） */
 .container {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 var(--space-3);
+  padding-left: max(1.5rem, calc(1.5rem + var(--safe-area-left)));
+  padding-right: max(1.5rem, calc(1.5rem + var(--safe-area-right)));
   position: relative;
   z-index: 1;
 }
@@ -145,26 +224,23 @@ code, .mono {
   letter-spacing: 0.02em;
 }
 
-/* 通用按钮样式：用于页面内按钮交互 */
+/* 通用按钮样式：用于页面内按钮交互，保障移动端触控友好尺寸 */
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
-  padding: 0.7rem 1.3rem;
+  min-height: 42px;
+  padding: 0.65rem 1.25rem;
   border-radius: var(--radius);
   border: 1px solid var(--color-ink);
   font-family: var(--font-mono);
-  font-size: 0.9rem;
-  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+  font-size: 0.88rem;
+  touch-action: manipulation;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-.btn:hover {
-  background: var(--color-ink);
-  color: var(--color-surface);
-  transform: translateY(-2px);
-}
-
-/* 博客列表卡片：统一外观与 hover 交互 */
+/* 博客列表卡片：统一外观 */
 .post-list li {
   position: relative;
   overflow: hidden;
@@ -187,15 +263,46 @@ code, .mono {
   transition: background 0.3s ease;
 }
 
-.post-list li:hover {
-  transform: translateY(-8px) scale(1.015) !important;
-  border-color: var(--color-accent);
-  box-shadow: 0 16px 36px rgba(109, 91, 208, 0.16);
+/* 仅在支持鼠标悬停的设备上触发 Hover 放大动效，避免移动端粘连 */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover {
+    background: var(--color-ink);
+    color: var(--color-surface);
+    transform: translateY(-2px);
+  }
+
+  .btn--accent:hover {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+  }
+
+  .post-list li:hover {
+    transform: translateY(-8px) scale(1.015) !important;
+    border-color: var(--color-accent);
+    box-shadow: 0 16px 36px rgba(109, 91, 208, 0.16);
+  }
+
+  .post-list li:hover::before {
+    background: var(--color-accent);
+  }
 }
 
-/* 博客卡片 hover 时顶部高亮条 */
-.post-list li:hover::before {
-  background: var(--color-accent);
+/* 触控设备专属：按压反馈触感（Active State） */
+@media (hover: none) {
+  .btn:active {
+    transform: scale(0.97);
+    background: rgba(18, 19, 26, 0.08);
+  }
+
+  .btn--accent:active {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+  }
+
+  .post-list li:active {
+    transform: scale(0.985);
+    border-color: var(--color-accent);
+  }
 }
 
 /* 强调按钮：用于次要但可见的呼出动作 */
@@ -204,15 +311,40 @@ code, .mono {
   background: var(--color-accent);
   color: #fff;
 }
-.btn--accent:hover {
-  background: var(--color-ink);
-  border-color: var(--color-ink);
-}
 
 /* 可见的键盘焦点，避免为了美观牺牲可访问性 */
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
+}
+
+/* 移动端统一响应式断点 (<= 640px) */
+@media (max-width: 640px) {
+  :root {
+    --space-3: 1.15rem;
+    --space-4: 1.75rem;
+    --space-5: 2.75rem;
+    --space-6: 3.8rem;
+  }
+
+  .container {
+    padding-left: max(1.25rem, calc(1.25rem + var(--safe-area-left)));
+    padding-right: max(1.25rem, calc(1.25rem + var(--safe-area-right)));
+  }
+
+  h1 {
+    font-size: clamp(1.85rem, 6.5vw, 2.5rem);
+    line-height: 1.15;
+  }
+
+  h2 {
+    font-size: clamp(1.35rem, 4.5vw, 1.75rem);
+  }
+
+  .prose blockquote {
+    padding: 0.8rem 1rem;
+    margin: 1rem 0;
+  }
 }
 
 /* 关怀模式：减少动画与过渡，改善可访问性 */

@@ -11,29 +11,190 @@ const currentPath = Astro.url.pathname;
 
 const navHome = `/${lang}`;
 const navBlog = `/${lang}/blog`;
+const isHomeActive = currentPath === navHome || currentPath === `${navHome}/`;
+const isBlogActive = currentPath.startsWith(navBlog);
+
+// 导航列表数据化，后续添加新板块（如 关于、随笔、友链）只需在此处追加配置
+const navItems = [
+  { id: 'work', label: t('nav.work'), href: navHome, active: isHomeActive },
+  { id: 'blog', label: t('nav.blog'), href: navBlog, active: isBlogActive },
+];
 ---
 
 <header class="site-header">
   <div class="container bar">
+    <!-- 站点 Logo：强制 nowrap 单行严防折行 -->
     <a href={navHome} class="mono brand">$ xiaotouming<span class="brand-suffix">.site</span></a>
 
-    <nav class="links">
-      <a href={navHome}>{t('nav.work')}</a>
-      <a href={navBlog}>{t('nav.blog')}</a>
+    <!-- 桌面端导航（屏幕 > 768px 显示） -->
+    <nav class="desktop-links">
+      {navItems.map((item) => (
+        <a href={item.href} class:list={['nav-item', { active: item.active }]}>
+          {item.label}
+        </a>
+      ))}
     </nav>
 
-    <div class="lang-switch mono">
+    <!-- 桌面端语言切换器 -->
+    <div class="desktop-lang mono">
       {Object.keys(languages).map((code) => (
         <a
           href={getLocalizedPath(currentPath, lang, code as Lang)}
           class:list={['lang-link', { active: code === lang }]}
+          aria-label={`Switch language to ${code}`}
         >
           {code}
         </a>
       ))}
     </div>
+
+    <!-- 移动端操作区（屏幕 <= 768px 显示） -->
+    <div class="mobile-actions">
+      <!-- 移动端顶部轻量语言切换（当前语言胶囊高亮） -->
+      <div class="mobile-lang-pills mono">
+        {Object.keys(languages).map((code) => (
+          <a
+            href={getLocalizedPath(currentPath, lang, code as Lang)}
+            class:list={['m-lang-pill', { active: code === lang }]}
+            aria-label={`Switch language to ${code}`}
+          >
+            {code}
+          </a>
+        ))}
+      </div>
+
+      <!-- 汉堡抽屉触发按钮 -->
+      <button
+        id="hamburger-btn"
+        class="hamburger-btn"
+        aria-label="打开导航抽屉菜单"
+        aria-expanded="false"
+        aria-controls="mobile-drawer"
+      >
+        <span class="burger-bar top"></span>
+        <span class="burger-bar mid"></span>
+        <span class="burger-bar bot"></span>
+      </button>
+    </div>
   </div>
 </header>
+
+<!-- 移动端汉堡抽屉与高斯模糊遮罩 -->
+<div id="drawer-overlay" class="drawer-overlay" aria-hidden="true"></div>
+
+<aside id="mobile-drawer" class="mobile-drawer" aria-label="移动端导航抽屉" aria-hidden="true">
+  <div class="drawer-header">
+    <div class="mono drawer-brand">
+      $ menu<span class="brand-suffix">.drawer</span>
+    </div>
+    <button id="drawer-close" class="drawer-close-btn" aria-label="关闭导航菜单">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <div class="drawer-content">
+    <div class="drawer-section-label mono">// 板块 NAVIGATION</div>
+    <nav class="drawer-nav">
+      {navItems.map((item, index) => (
+        <a href={item.href} class:list={['drawer-nav-item', { active: item.active }]}>
+          <span class="mono drawer-num">0{index + 1}</span>
+          <span class="drawer-text">{item.label}</span>
+          <span class="drawer-arrow">→</span>
+        </a>
+      ))}
+    </nav>
+
+    <div class="drawer-divider"></div>
+
+    <div class="drawer-section-label mono">// 语言 LANGUAGE</div>
+    <div class="drawer-lang-list">
+      {Object.keys(languages).map((code) => (
+        <a
+          href={getLocalizedPath(currentPath, lang, code as Lang)}
+          class:list={['drawer-lang-card', { active: code === lang }]}
+        >
+          <span class="mono drawer-lang-code">{code.toUpperCase()}</span>
+          <span class="drawer-lang-name">{languages[code as Lang]}</span>
+          {code === lang && <span class="mono drawer-lang-badge">ACTIVE</span>}
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <div class="drawer-footer mono">
+    <span>© 2026 xiaotouming.site</span>
+    <span class="drawer-tag">DIGITAL NOTEBOOK</span>
+  </div>
+</aside>
+
+<script>
+  function setupDrawer() {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const drawerCloseBtn = document.getElementById('drawer-close');
+    const drawerOverlay = document.getElementById('drawer-overlay');
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    const drawerLinks = document.querySelectorAll('.drawer-nav-item, .drawer-lang-card');
+
+    if (!hamburgerBtn || !mobileDrawer || !drawerOverlay) return;
+
+    function openDrawer() {
+      mobileDrawer.classList.add('is-open');
+      drawerOverlay.classList.add('is-open');
+      hamburgerBtn.classList.add('is-active');
+      hamburgerBtn.setAttribute('aria-expanded', 'true');
+      mobileDrawer.setAttribute('aria-hidden', 'false');
+      drawerOverlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDrawer() {
+      mobileDrawer.classList.remove('is-open');
+      drawerOverlay.classList.remove('is-open');
+      hamburgerBtn.classList.remove('is-active');
+      hamburgerBtn.setAttribute('aria-expanded', 'false');
+      mobileDrawer.setAttribute('aria-hidden', 'true');
+      drawerOverlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    hamburgerBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (mobileDrawer.classList.contains('is-open')) {
+        closeDrawer();
+      } else {
+        openDrawer();
+      }
+    };
+
+    if (drawerCloseBtn) {
+      drawerCloseBtn.onclick = (e) => {
+        e.stopPropagation();
+        closeDrawer();
+      };
+    }
+
+    drawerOverlay.onclick = closeDrawer;
+
+    drawerLinks.forEach((link) => {
+      link.addEventListener('click', closeDrawer);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mobileDrawer.classList.contains('is-open')) {
+        closeDrawer();
+      }
+    });
+  }
+
+  setupDrawer();
+  document.addEventListener('astro:page-load', setupDrawer);
+  document.addEventListener('astro:before-swap', () => {
+    document.body.style.overflow = '';
+  });
+</script>
 
 <style>
   .site-header {
@@ -42,47 +203,366 @@ const navBlog = `/${lang}/blog`;
     z-index: 50;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    background: rgba(255, 255, 255, 0.42);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    background: rgba(255, 255, 255, 0.76);
+    border-bottom: 1px solid rgba(216, 220, 228, 0.7);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    padding-top: var(--safe-area-top);
   }
+
   .bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding-top: var(--space-2);
     padding-bottom: var(--space-2);
+    gap: 0.75rem;
   }
+
+  /* 品牌 Logo：强制白空不折行，字号柔和缩放 */
   .brand {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-ink);
+    font-size: clamp(0.95rem, 4vw, 1.1rem);
+    white-space: nowrap !important;
+    display: inline-flex;
+    align-items: center;
+    touch-action: manipulation;
   }
   .brand-suffix {
     color: var(--color-accent);
   }
-  .links {
+
+  /* 桌面端导航项 */
+  .desktop-links {
     display: flex;
-    gap: var(--space-3);
+    align-items: center;
+    gap: var(--space-2);
   }
-  .links a {
-    font-size: 0.95rem;
+
+  .nav-item {
+    font-size: 0.92rem;
     color: var(--color-muted);
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    transition: color 0.2s ease, background 0.2s ease;
+    touch-action: manipulation;
+    white-space: nowrap;
   }
-  .links a:hover {
+  .nav-item:hover, .nav-item.active {
     color: var(--color-ink);
   }
-  .lang-switch {
+  .nav-item.active {
+    font-weight: 600;
+    background: rgba(109, 91, 208, 0.08);
+    color: var(--color-accent);
+  }
+
+  /* 桌面端语言切换 */
+  .desktop-lang {
     display: flex;
-    gap: 0.4rem;
-    font-size: 0.8rem;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
   }
   .lang-link {
-    padding: 0.2rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 28px;
+    padding: 0 0.45rem;
     border-radius: 5px;
     color: var(--color-muted);
+    transition: background 0.2s ease, color 0.2s ease;
+    touch-action: manipulation;
+  }
+  .lang-link:hover {
+    color: var(--color-ink);
   }
   .lang-link.active {
     background: var(--color-accent);
     color: #fff;
+    font-weight: 600;
+  }
+
+  /* 移动端操作区（默认在宽屏隐藏） */
+  .mobile-actions {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .mobile-lang-pills {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.72rem;
+  }
+  .m-lang-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 0.35rem;
+    border-radius: 5px;
+    color: var(--color-muted);
+    touch-action: manipulation;
+  }
+  .m-lang-pill.active {
+    background: var(--color-accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* 汉堡按钮 */
+  .hamburger-btn {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    background: #ffffff;
+    border: 1px solid var(--color-line);
+    border-radius: 8px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  .hamburger-btn:active {
+    transform: scale(0.94);
+  }
+  .burger-bar {
+    width: 18px;
+    height: 2px;
+    background: var(--color-ink);
+    border-radius: 999px;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+  .burger-bar.mid {
+    margin: 3.5px 0;
+  }
+  .hamburger-btn.is-active .burger-bar.top {
+    transform: translateY(5.5px) rotate(45deg);
+  }
+  .hamburger-btn.is-active .burger-bar.mid {
+    opacity: 0;
+  }
+  .hamburger-btn.is-active .burger-bar.bot {
+    transform: translateY(-5.5px) rotate(-45deg);
+  }
+
+  /* 抽屉全屏毛玻璃遮罩 */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(18, 19, 26, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .drawer-overlay.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* 抽屉主体面板 */
+  .mobile-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(320px, 84vw);
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-left: 1px solid var(--color-line);
+    box-shadow: -12px 0 40px rgba(18, 19, 26, 0.15);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    padding-top: max(1.2rem, var(--safe-area-top));
+    padding-bottom: max(1.2rem, var(--safe-area-bottom));
+    box-sizing: border-box;
+  }
+  .mobile-drawer.is-open {
+    transform: translateX(0);
+  }
+
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1.4rem 1.2rem;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .drawer-brand {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--color-ink);
+  }
+  .drawer-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+    border-radius: 8px;
+    color: var(--color-muted);
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .drawer-close-btn:active {
+    transform: scale(0.94);
+    background: var(--color-bg);
+  }
+
+  .drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .drawer-section-label {
+    font-size: 0.72rem;
+    color: var(--color-accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.25rem;
+  }
+
+  .drawer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .drawer-nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: 8px;
+    color: var(--color-ink);
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    touch-action: manipulation;
+  }
+  .drawer-nav-item:active {
+    transform: scale(0.98);
+  }
+  .drawer-nav-item.active {
+    border-color: var(--color-accent);
+    background: rgba(109, 91, 208, 0.06);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .drawer-num {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    width: 24px;
+  }
+  .drawer-nav-item.active .drawer-num {
+    color: var(--color-accent);
+  }
+  .drawer-text {
+    flex: 1;
+  }
+  .drawer-arrow {
+    color: var(--color-muted);
+    font-size: 0.95rem;
+  }
+  .drawer-nav-item.active .drawer-arrow {
+    color: var(--color-accent);
+  }
+
+  .drawer-divider {
+    height: 1px;
+    background: var(--color-line);
+    margin: 0.75rem 0;
+  }
+
+  .drawer-lang-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .drawer-lang-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-size: 0.85rem;
+    touch-action: manipulation;
+  }
+  .drawer-lang-card.active {
+    border-color: var(--color-accent);
+    background: rgba(109, 91, 208, 0.08);
+    font-weight: 600;
+  }
+  .drawer-lang-code {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    width: 28px;
+  }
+  .drawer-lang-badge {
+    font-size: 0.65rem;
+    background: var(--color-accent);
+    color: #fff;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+  }
+
+  .drawer-footer {
+    padding: 1rem 1.4rem 0.5rem;
+    border-top: 1px solid var(--color-line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72rem;
+    color: var(--color-muted);
+  }
+
+  /* 响应式断点控制：<= 768px 切入移动端汉堡抽屉形态 */
+  @media (max-width: 768px) {
+    .desktop-links,
+    .desktop-lang {
+      display: none;
+    }
+    .mobile-actions {
+      display: flex;
+    }
+    .bar {
+      padding-top: 0.65rem;
+      padding-bottom: 0.65rem;
+    }
+  }
+
+  /* 极窄屏 (< 360px) 优化 */
+  @media (max-width: 360px) {
+    .mobile-lang-pills {
+      display: none; /* 在超级小屏下，顶部仅留汉堡按钮，语言切换在抽屉内完整支持 */
+    }
   }
 </style>

@@ -15,7 +15,7 @@ const { endText } = Astro.props;
   .scroll-hint {
     position: fixed;
     left: 50%;
-    bottom: 1.5rem;
+    bottom: max(1.25rem, calc(1.25rem + var(--safe-area-bottom)));
     transform: translateX(-50%);
     display: flex;
     align-items: center;

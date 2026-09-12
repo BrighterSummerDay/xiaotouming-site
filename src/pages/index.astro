@@ -41,7 +41,7 @@ const welcomeData = [
 <html lang="zh">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>xiaotouming · 欢迎访问 | Portal</title>
     <meta name="description" content="小透铭的个人网站导航入口 - 请选择语言进入" />
@@ -105,29 +105,43 @@ const welcomeData = [
           请选择语言 / 言語を選択してください / SELECT LANGUAGE
         </p>
 
-        <div class="cards-grid">
+        <!-- 卡片展示区：桌面端三列网格，移动端 iOS 单卡平滑滑动轮播 -->
+        <div id="cards-slider-container" class="cards-slider-container">
+          <div id="cards-track" class="cards-track">
+            {welcomeData.map((item, index) => (
+              <a
+                href={item.href}
+                class:list={['lang-card', { 'is-active': index === 0 }]}
+                data-index={index}
+                data-lang={item.lang}
+              >
+                <div class="card-top">
+                  <span class="mono card-code">{item.code}</span>
+                </div>
+                <div class="card-body">
+                  <h2 class="card-label">{item.label}</h2>
+                  <p class="card-greeting mono">{item.greeting} →</p>
+                  <p class="card-desc">{item.desc}</p>
+                </div>
+                <div class="card-enter-btn mono">
+                  <span>ENTER</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <!-- 移动端专属：iOS 风格滑动指示小圆点/胶囊 -->
+        <div class="slider-dots" id="slider-dots" aria-label="卡片切换指示器">
           {welcomeData.map((item, index) => (
-            <a
-              href={item.href}
-              class:list={['lang-card', { 'is-active': index === 0 }]}
-              data-index={index}
-              data-lang={item.lang}
-            >
-              <div class="card-top">
-                <span class="mono card-code">{item.code}</span>
-              </div>
-              <div class="card-body">
-                <h2 class="card-label">{item.label}</h2>
-                <p class="card-greeting mono">{item.greeting} →</p>
-                <p class="card-desc">{item.desc}</p>
-              </div>
-              <div class="card-enter-btn mono">
-                <span>ENTER</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </div>
-            </a>
+            <button
+              class:list={['dot', { 'is-active': index === 0 }]}
+              data-slide={index}
+              aria-label={`切换到 ${item.label}`}
+            ></button>
           ))}
         </div>
       </section>
@@ -174,6 +188,9 @@ const welcomeData = [
         const langSelection = document.getElementById('lang-selection');
         const footerEl = document.getElementById('portal-footer');
         const cards = document.querySelectorAll('.lang-card');
+        const cardsTrack = document.getElementById('cards-track');
+        const sliderContainer = document.getElementById('cards-slider-container');
+        const dots = document.querySelectorAll('#slider-dots .dot');
 
         if (!cards.length) return;
 
@@ -182,20 +199,26 @@ const welcomeData = [
           currentIndex = index;
 
           cards.forEach((c, i) => {
-            if (i === index) {
-              c.classList.add('is-active');
-            } else {
-              c.classList.remove('is-active');
-            }
+            c.classList.toggle('is-active', i === index);
           });
 
-          // 文字形态切换
+          // 移动端卡片平滑滚动至对应卡片（营造三卡片水平滑行质感）
+          if (cardsTrack && window.innerWidth <= 768) {
+            cardsTrack.style.setProperty('transform', `translateX(-${index * 100}%)`, 'important');
+          }
+
+          // 同步更新 iOS 风格胶囊指示点
+          dots.forEach((dot, i) => {
+            dot.classList.toggle('is-active', i === index);
+          });
+
+          // 欢迎语平滑渐变动效
           gsap.timeline()
             .to([titleEl, subtitleEl], {
               opacity: 0,
-              y: -12,
-              filter: 'blur(10px)',
-              duration: 0.3,
+              y: -10,
+              filter: 'blur(8px)',
+              duration: 0.28,
               stagger: 0.04,
               ease: 'power2.in',
               onComplete: () => {
@@ -205,13 +228,13 @@ const welcomeData = [
             })
             .fromTo(
               [titleEl, subtitleEl],
-              { opacity: 0, y: 16, filter: 'blur(10px)' },
+              { opacity: 0, y: 12, filter: 'blur(8px)' },
               {
                 opacity: 1,
                 y: 0,
                 filter: 'blur(0px)',
-                duration: 0.55,
-                stagger: 0.08,
+                duration: 0.5,
+                stagger: 0.06,
                 ease: 'power2.out',
               }
             );
@@ -225,103 +248,255 @@ const welcomeData = [
           }, 3800);
         }
 
+        // 桌面端鼠标悬浮触发切换
         cards.forEach((card, idx) => {
           card.addEventListener('mouseenter', () => {
-            if (timer) clearInterval(timer);
-            updateWelcome(idx, true);
+            if (window.innerWidth > 768) {
+              if (timer) clearInterval(timer);
+              updateWelcome(idx, true);
+            }
           });
 
           card.addEventListener('mouseleave', () => {
+            if (window.innerWidth > 768) {
+              startAutoRotate();
+            }
+          });
+        });
+
+        // 移动端 iOS 胶囊指示小圆点点击直达
+        dots.forEach((dot) => {
+          dot.addEventListener('click', (e) => {
+            e.preventDefault();
+            const slideIdx = parseInt(dot.getAttribute('data-slide') || '0', 10);
+            if (timer) clearInterval(timer);
+            updateWelcome(slideIdx, true);
             startAutoRotate();
           });
         });
 
-        // 动效核心：绝对对齐计算，开场动画全套播放完成后，才真正启动三语卡片轮播
+        // 移动端手势滑动支持（Swipe Left / Right）及卡片轻触跳转保护
+        if (sliderContainer) {
+          let touchStartX = 0;
+          let touchStartY = 0;
+          let isSwiping = false;
+
+          sliderContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            isSwiping = false;
+            if (timer) clearInterval(timer);
+          }, { passive: true });
+
+          sliderContainer.addEventListener('touchmove', (e) => {
+            const diffX = Math.abs(e.changedTouches[0].screenX - touchStartX);
+            const diffY = Math.abs(e.changedTouches[0].screenY - touchStartY);
+            if (diffX > 10 && diffX > diffY) {
+              isSwiping = true;
+            }
+          }, { passive: true });
+
+          sliderContainer.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const touchEndY = e.changedTouches[0].screenY;
+            const diffX = touchStartX - touchEndX;
+            const diffY = touchStartY - touchEndY;
+            if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+              if (diffX > 0) {
+                // 向左滑 -> 下一张
+                const nextIdx = (currentIndex + 1) % welcomeData.length;
+                updateWelcome(nextIdx, true);
+              } else {
+                // 向右滑 -> 上一张
+                const prevIdx = (currentIndex - 1 + welcomeData.length) % welcomeData.length;
+                updateWelcome(prevIdx, true);
+              }
+            }
+            setTimeout(() => {
+              isSwiping = false;
+            }, 60);
+            startAutoRotate();
+          }, { passive: true });
+
+          cards.forEach((card) => {
+            card.addEventListener('touchstart', () => {
+              card.classList.add('is-touched');
+            }, { passive: true });
+
+            card.addEventListener('touchend', () => {
+              card.classList.remove('is-touched');
+            }, { passive: true });
+
+            card.addEventListener('touchcancel', () => {
+              card.classList.remove('is-touched');
+            }, { passive: true });
+
+            card.addEventListener('click', (e) => {
+              if (isSwiping) {
+                e.preventDefault();
+              }
+            });
+          });
+        }
+
+        // 窗口尺寸变化响应
+        window.addEventListener('resize', () => {
+          if (cardsTrack) {
+            if (window.innerWidth > 768) {
+              cardsTrack.style.removeProperty('transform');
+            } else {
+              cardsTrack.style.setProperty('transform', `translateX(-${currentIndex * 100}%)`, 'important');
+            }
+          }
+        });
+
+        // 开场动效：彻底消除 Transform 叠加，像素级绝对对齐
         if (brandLogo && targetPlaceholder && curtainEl && progressEl && barWrap) {
-          // 页面主体预先隐藏并稍微置上 (y: -24)
-          gsap.set([welcomeHero, langSelection, footerEl], {
-            opacity: 0,
-            y: -24,
-          });
+          try {
+            if (brandLogo.parentElement !== document.body) {
+              document.body.appendChild(brandLogo);
+            }
 
-          // 动画播完之前，禁止交互（避免点到还没显形的卡片）
-          langSelection?.setAttribute('inert', '');
+            // 页面主体预先隐藏并置上
+            gsap.set([welcomeHero, langSelection, footerEl], {
+              opacity: 0,
+              y: -20,
+            });
 
-          // 重置 Logo 为纯 CSS 居中初始态
-          gsap.set(brandLogo, {
-            top: 'calc(50vh - 36px)',
-            left: '50vw',
-            xPercent: -50,
-            yPercent: -50,
-            fontSize: '1.5rem',
-            opacity: 1,
-          });
+            langSelection?.setAttribute('inert', '');
 
-          // 精确获取目标 Header 归位坐标
-          const targetRect = targetPlaceholder.getBoundingClientRect();
+            const isNarrow = window.innerWidth < 480;
 
-          const tl = gsap.timeline({
-            onComplete: () => {
-              // 动画播完，恢复卡片可交互
-              langSelection?.removeAttribute('inert');
-              
-              // 开场全套动画全部落定沉淀之后，才启动语言轮播倒计时！
-              startAutoRotate();
-            },
-          });
+            // 初始绝对居中状态：由 CSS left:0; right:0; margin: 0 auto 原生保障，消除任何 transform 叠加偏移
+            gsap.set(brandLogo, {
+              position: 'fixed',
+              top: 'calc(50vh - 36px)',
+              left: 0,
+              right: 0,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              width: 'max-content',
+              fontSize: isNarrow ? '1.18rem' : '1.5rem',
+              whiteSpace: 'nowrap',
+              opacity: 1,
+              pointerEvents: 'none',
+              clearProps: 'transform',
+            });
 
-          // 步骤 1: 读条增长 (1.0s)，Logo 在最顶层居中 100% 清晰可见
-          tl.to(progressEl, {
-            width: '100%',
-            duration: 1.0,
-            ease: 'power2.inOut',
-          })
-          // 步骤 2: 进度条淡出 (0.35s)
-          .to(barWrap, {
-            opacity: 0,
-            y: 12,
-            duration: 0.35,
-            ease: 'power2.in',
-          }, '+=0.1')
-          // 步骤 3: Logo 优雅慢速滑归左上角 Header 目标点 (1.1s)
-          .to(brandLogo, {
-            top: `${targetRect.top}px`,
-            left: `${targetRect.left}px`,
-            xPercent: 0,
-            yPercent: 0,
-            fontSize: '1.25rem',
-            duration: 1.1,
-            ease: 'power3.inOut',
-          })
-          // 幕布同步淡隐 (0.9s)
-          .to(curtainEl, {
-            opacity: 0,
-            duration: 0.9,
-            ease: 'power2.out',
-            onComplete: () => {
-              curtainEl.style.display = 'none';
-            },
-          }, '-=0.9')
-          // 步骤 4: 由 Logo 领衔“自上而下”顺次沉稳舒缓展开
-          .to(welcomeHero, {
-            opacity: 1,
-            y: 0,
-            duration: 1.2,
-            ease: 'power2.out',
-          }, '-=0.2')
-          .to(langSelection, {
-            opacity: 1,
-            y: 0,
-            duration: 1.3,
-            ease: 'power2.out',
-          }, '-=0.7')
-          .to(footerEl, {
-            opacity: 1,
-            y: 0,
-            duration: 1.0,
-            ease: 'power2.out',
-          }, '-=0.7');
+            const tl = gsap.timeline({
+              onComplete: () => {
+                langSelection?.removeAttribute('inert');
+
+                // 归位到 Header 占位节点
+                targetPlaceholder.appendChild(brandLogo);
+                gsap.set(brandLogo, {
+                  position: 'static',
+                  top: 'auto',
+                  left: 'auto',
+                  right: 'auto',
+                  margin: 0,
+                  fontSize: isNarrow ? '1.05rem' : '1.25rem',
+                  clearProps: 'transform',
+                  whiteSpace: 'nowrap',
+                  pointerEvents: 'auto',
+                });
+
+                startAutoRotate();
+              },
+            });
+
+            // 步骤 1: 进度条读条 (1.0s)
+            tl.to(progressEl, {
+              width: '100%',
+              duration: 1.0,
+              ease: 'power2.inOut',
+            })
+            // 步骤 2: 进度条淡出 (0.35s)
+            .to(barWrap, {
+              opacity: 0,
+              y: 12,
+              duration: 0.35,
+              ease: 'power2.in',
+            }, '+=0.1')
+            // 步骤 3: 飞行前将居中坐标无缝定格为绝对 left/top，平滑飞到 Header target 坐标
+            .call(() => {
+              const currentRect = brandLogo.getBoundingClientRect();
+              gsap.set(brandLogo, {
+                left: `${currentRect.left}px`,
+                top: `${currentRect.top}px`,
+                right: 'auto',
+                marginLeft: 0,
+                marginRight: 0,
+              });
+            })
+            .to(brandLogo, {
+              top: () => `${targetPlaceholder.getBoundingClientRect().top}px`,
+              left: () => `${targetPlaceholder.getBoundingClientRect().left}px`,
+              fontSize: isNarrow ? '1.05rem' : '1.25rem',
+              duration: 1.1,
+              ease: 'power3.inOut',
+            })
+            // 幕布同步淡隐
+            .to(curtainEl, {
+              opacity: 0,
+              duration: 0.9,
+              ease: 'power2.out',
+              onComplete: () => {
+                curtainEl.style.display = 'none';
+              },
+            }, '-=0.9')
+            // 步骤 4: 页面主体顺次展开
+            .to(welcomeHero, {
+              opacity: 1,
+              y: 0,
+              duration: 1.1,
+              ease: 'power2.out',
+            }, '-=0.2')
+            .to(langSelection, {
+              opacity: 1,
+              y: 0,
+              duration: 1.3,
+              ease: 'power2.out',
+            }, '-=0.7')
+            .to(footerEl, {
+              opacity: 1,
+              y: 0,
+              duration: 1.0,
+              ease: 'power2.out',
+            }, '-=0.7');
+          } catch (err) {
+            console.error('Portal animation error, falling back:', err);
+            if (curtainEl) curtainEl.style.display = 'none';
+            if (brandLogo && targetPlaceholder && brandLogo.parentElement !== targetPlaceholder) {
+              targetPlaceholder.appendChild(brandLogo);
+              gsap.set(brandLogo, {
+                position: 'static',
+                top: 'auto',
+                left: 'auto',
+                right: 'auto',
+                margin: 0,
+                clearProps: 'transform',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'auto',
+              });
+            }
+            gsap.set([welcomeHero, langSelection, footerEl], { opacity: 1, y: 0 });
+            langSelection?.removeAttribute('inert');
+            startAutoRotate();
+          }
         } else {
+          if (brandLogo && targetPlaceholder && brandLogo.parentElement !== targetPlaceholder) {
+            targetPlaceholder.appendChild(brandLogo);
+            gsap.set(brandLogo, {
+              position: 'static',
+              top: 'auto',
+              left: 'auto',
+              xPercent: 0,
+              yPercent: 0,
+              transform: 'none',
+              pointerEvents: 'auto',
+            });
+          }
           // 兜底全显并启动轮播
           gsap.set([welcomeHero, langSelection, footerEl], { opacity: 1, y: 0 });
           startAutoRotate();
@@ -353,14 +528,16 @@ const welcomeData = [
   #brand-logo {
     position: fixed;
     z-index: 10001;
-    font-size: 1.5rem;
+    font-size: clamp(1.15rem, 5vw, 1.5rem);
     font-weight: 700;
     color: var(--color-ink);
     top: calc(50vh - 36px);
-    left: 50vw;
-    transform: translate(-50%, -50%);
-    margin: 0;
-    line-height: 1;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: max-content;
+    line-height: 1.8rem;
+    white-space: nowrap !important;
     pointer-events: none;
   }
   #brand-logo span {
@@ -402,8 +579,9 @@ const welcomeData = [
   }
 
   .curtain-logo-placeholder {
-    font-size: 1.5rem;
+    font-size: clamp(1.15rem, 5vw, 1.5rem);
     height: 1.8rem;
+    white-space: nowrap;
   }
 
   .curtain-bar-wrap {
@@ -490,7 +668,11 @@ const welcomeData = [
 
   .brand-logo-target {
     height: 1.5rem;
-    width: 180px;
+    min-width: 180px;
+    width: max-content;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
   }
 
   /* Welcome Hero 动效展示 */
@@ -537,11 +719,26 @@ const welcomeData = [
     margin: 0;
   }
 
-  .cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-    gap: var(--space-3);
-    width: 100%;
+  /* 桌面端：三卡片网格并排展示 */
+  @media (min-width: 769px) {
+    .cards-slider-container {
+      width: 100%;
+      overflow: visible;
+      position: relative;
+    }
+
+    .cards-track {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-3);
+      width: 100%;
+      transform: none !important;
+    }
+
+    /* iOS 风格小圆点：桌面端隐藏 */
+    .slider-dots {
+      display: none;
+    }
   }
 
   .lang-card {
@@ -574,15 +771,27 @@ const welcomeData = [
     transition: background 0.3s ease;
   }
 
-  .lang-card:hover, .lang-card.is-active {
-    transform: translateY(-8px) scale(1.015);
-    border-color: var(--color-accent);
-    background: #ffffff;
-    box-shadow: 0 16px 36px rgba(109, 91, 208, 0.16);
-  }
+  /* 电脑端鼠标悬停动效（仅在宽屏设备生效） */
+  @media (min-width: 769px) {
+    .lang-card:hover, .lang-card.is-active {
+      transform: translateY(-8px) scale(1.015);
+      border-color: var(--color-accent);
+      background: #ffffff;
+      box-shadow: 0 16px 36px rgba(109, 91, 208, 0.16);
+    }
 
-  .lang-card:hover::before, .lang-card.is-active::before {
-    background: var(--color-accent);
+    .lang-card:hover::before, .lang-card.is-active::before {
+      background: var(--color-accent);
+    }
+
+    .lang-card:hover .card-enter-btn {
+      color: var(--color-accent);
+    }
+
+    .lang-card:hover .card-enter-btn svg {
+      transform: translateX(4px);
+      transition: transform 0.2s ease;
+    }
   }
 
   .card-top {
@@ -634,15 +843,6 @@ const welcomeData = [
     transition: color 0.2s ease;
   }
 
-  .lang-card:hover .card-enter-btn {
-    color: var(--color-accent);
-  }
-
-  .lang-card:hover .card-enter-btn svg {
-    transform: translateX(4px);
-    transition: transform 0.2s ease;
-  }
-
   .portal-footer {
     display: flex;
     justify-content: space-between;
@@ -653,9 +853,123 @@ const welcomeData = [
     border-top: 1px solid var(--color-line);
   }
 
-  @media (max-width: 640px) {
-    .portal-container { gap: var(--space-4); }
-    .welcome-hero { min-height: 160px; padding: var(--space-2) 0; }
-    .portal-footer { flex-direction: column; gap: 0.4rem; text-align: center; }
+  @media (max-width: 768px) {
+    .portal-container {
+      gap: var(--space-3);
+      padding: max(1.25rem, var(--safe-area-top)) max(1.2rem, var(--safe-area-left)) max(1.5rem, var(--safe-area-bottom)) max(1.2rem, var(--safe-area-right));
+    }
+    .welcome-hero {
+      min-height: 120px;
+      padding: var(--space-2) 0;
+      gap: 0.4rem;
+    }
+    .welcome-title {
+      font-size: clamp(1.45rem, 6vw, 1.95rem);
+    }
+    .welcome-subtitle {
+      font-size: clamp(0.85rem, 3.2vw, 0.98rem);
+    }
+
+    /* 移动端精简为一张可平滑滚动的 iOS 质感卡片轮播 */
+    .cards-slider-container {
+      overflow: hidden;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      touch-action: pan-y;
+      width: 100%;
+    }
+
+    .cards-track {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      width: 100%;
+      gap: 0;
+      transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+
+    .lang-card {
+      flex: 0 0 100%;
+      min-width: 100%;
+      max-width: 100%;
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 20px;
+      padding: 1.35rem 1.25rem;
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1.5px solid var(--color-line);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: none;
+      transform: none;
+    }
+
+    .lang-card::before {
+      display: none !important;
+    }
+
+    /* 移动端仅在手指按下/触摸移动到卡片时才触发高亮反馈 */
+    .lang-card:active,
+    .lang-card.is-touched {
+      border-color: var(--color-accent) !important;
+      transform: scale(0.988) !important;
+      box-shadow: 0 8px 24px rgba(109, 91, 208, 0.12) !important;
+    }
+
+    .lang-card:active .card-enter-btn,
+    .lang-card.is-touched .card-enter-btn {
+      color: var(--color-accent) !important;
+    }
+
+    .lang-card:active .card-enter-btn svg,
+    .lang-card.is-touched .card-enter-btn svg {
+      transform: translateX(4px) !important;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    .card-label {
+      font-size: 1.35rem;
+    }
+
+    /* iOS 风格弹性胶囊分页圆点 */
+    .slider-dots {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 0.85rem;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--color-line);
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      outline: none;
+    }
+
+    .dot.is-active {
+      width: 22px;
+      background: var(--color-accent);
+      border-radius: 999px;
+    }
+
+    .portal-footer {
+      flex-direction: column;
+      gap: 0.4rem;
+      text-align: center;
+      padding-bottom: 0.5rem;
+    }
   }
 </style>

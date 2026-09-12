@@ -36,9 +36,19 @@ onMounted(() => {
   font-size: 0.95rem;
   color: var(--color-signal);
   background: var(--color-ink);
-  display: inline-block;
-  padding: 0.5rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+  padding: 0.5rem 0.9rem;
   border-radius: 6px;
+  word-break: break-word;
+}
+@media (max-width: 640px) {
+  .terminal {
+    font-size: 0.84rem;
+    padding: 0.4rem 0.75rem;
+  }
 }
 .prompt {
   color: var(--color-accent-soft);
