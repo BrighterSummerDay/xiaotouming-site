@@ -96,7 +96,7 @@ const navItems = [
   </div>
 
   <div class="drawer-content">
-    <div class="drawer-section-label mono">// 板块 NAVIGATION</div>
+    <div class="drawer-section-label mono">// NAVIGATION</div>
     <nav class="drawer-nav">
       {navItems.map((item, index) => (
         <a href={item.href} class:list={['drawer-nav-item', { active: item.active }]}>
@@ -109,7 +109,7 @@ const navItems = [
 
     <div class="drawer-divider"></div>
 
-    <div class="drawer-section-label mono">// 语言 LANGUAGE</div>
+    <div class="drawer-section-label mono">// LANGUAGE</div>
     <div class="drawer-lang-list">
       {Object.keys(languages).map((code) => (
         <a
@@ -126,7 +126,6 @@ const navItems = [
 
   <div class="drawer-footer mono">
     <span>© 2026 xiaotouming.site</span>
-    <span class="drawer-tag">DIGITAL NOTEBOOK</span>
   </div>
 </aside>
 
